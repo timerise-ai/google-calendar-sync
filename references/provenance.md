@@ -102,6 +102,14 @@ shared a code block with the `[action]` route and used `calendarRoutes` without 
 an agent copied failed `tsc`. **Shipped:** its own block with its own import, in
 [http-routes.md](http-routes.md); the release check writes every block to its own path and compiles it.
 
+### 14. The wiring failed `next build` without secrets
+
+Found by the 0.2.0 agent evals, not by the audit. `setup.ts` read every variable at import, and `next build`
+imports each route module to collect page data, so a build without the secrets (CI, a preview deployment)
+failed with `CALENDAR_... is not set`; every agent wrapped it in a lazy getter of its own. **Shipped:**
+`calendarRoutes()` and `calendarDeps()` build on first call, in [http-routes.md](http-routes.md); the
+release check runs `next build` with an empty environment.
+
 ## Kept deliberately
 
 - **Full-window resync per notification**, not `syncToken` incremental sync. It costs more quota and
@@ -142,6 +150,7 @@ None of these ran in the earlier implementation. The tests pin them; production 
 - Restoring a deleted booking event on re-confirmation (409 turns into an update with `status: 'confirmed'`).
 - Supabase/Postgres store and schema, in [supabase-backend.md](supabase-backend.md).
 - The test suite, memory store and fake Google, in [testing.md](testing.md).
+- The cron route on GET as well as POST, for Vercel Cron; found by the 0.2.0 agent evals.
 
 ## If you are fixing an existing integration
 

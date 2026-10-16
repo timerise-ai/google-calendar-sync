@@ -19,7 +19,9 @@ for tz in UTC Europe/Warsaw Pacific/Auckland America/Los_Angeles; do
 done
 ```
 
-In a host with vitest or jest, the files run unchanged once the runner's TypeScript transform is on
+Copy both files as they are and run them as they are: no converted assertions, no shim runner, no
+dropped test; 32 tests per time zone is the count to report. In a host with vitest or jest, the files run
+unchanged once the runner's TypeScript transform is on
 (`node:test`'s `test` maps to the runner's `test`, or import from `vitest`).
 
 **Run under at least two process time zones.** The all-day mapping must not depend on the server's

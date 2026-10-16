@@ -64,6 +64,9 @@ Sibling directories under `../` (`microsoft-calendar-sync`, `time-slot-generator
      `flows.test.ts`; to run one test, add `--test-name-pattern '<words from its title>'`.
   4. Every mutation in the table in `references/testing.md` still turns the suite red.
   5. `schema.sql` applies to a scratch Postgres with RLS on all five tables.
+  6. `next build` of the two `app/` route files, beside a minimal layout and page, passes with an empty
+     environment (`env -i PATH=$PATH HOME=$HOME npx next build`): `setup.ts` must not read a variable at
+     import.
 - **Never change the inputs of `bookingEventId`, `busyBlockId` or `calendarRowId`.** Every consumer's
   existing events, blocks and rows are addressed by them.
 - **Test counts are claims.** `test-suite.md` holds 32 tests; `README.md`, the `SKILL.md` description and

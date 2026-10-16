@@ -119,7 +119,10 @@ questions: `free`, `declined`, `own-booking`.
 | `CALENDAR_RETURN_URL` | `https://app.example.com/settings/calendar` | Where the callback lands |
 | `CRON_SECRET` | | Bearer for the cron route |
 
-Schedule the cron every 12 hours (Cloud Scheduler, Vercel Cron, Kubernetes CronJob):
+Schedule the cron every 12 hours (Cloud Scheduler, Vercel Cron, Kubernetes CronJob). Vercel Cron calls the
+route with GET and sends `CRON_SECRET` as `Authorization: Bearer`, so the route answers GET too, and on the
+Hobby plan it runs at most once a day, which still leaves a channel two renewal chances in the 48-hour
+window. Other schedulers POST:
 
 ```bash
 curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://api.example.com/calendar/google/cron

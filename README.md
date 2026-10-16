@@ -128,7 +128,7 @@ Every block is written to the path in its header comment and compiled as one pro
 `express` 5.2.1 and `@types/node`. The 32 tests pass under `node --test` with `TZ` set to `UTC`,
 `Europe/Warsaw`, `Pacific/Auckland` and `America/Los_Angeles`, and each mutation in the table in
 [testing.md](references/testing.md) turns the suite red. `schema.sql` applies to a fresh PostgreSQL 18 with
-RLS on every table.
+RLS on every table. `next build` 16.4.2 of the two route files succeeds with no environment variable set.
 
 ## Not this
 

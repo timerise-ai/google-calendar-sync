@@ -11,7 +11,7 @@ Hono, Bun or Deno, and through a small adapter in Express.
 | `/calendar/google/calendars/:calendarId` | PATCH | user | the calendar view; 404, 409 on guard failures |
 | `/calendar/google/disconnect` | POST | user | 204 |
 | `/calendar/google/notifications` | POST | none (channel token) | 200 `sync`, 204 done/unknown, 401 bad token, 400 foreign resource, 500 sync failed |
-| `/calendar/google/cron` | POST | `Bearer CRON_SECRET` | the renewal report |
+| `/calendar/google/cron` | GET, POST | `Bearer CRON_SECRET` | the renewal report |
 
 - **The callback always redirects.** A browser is on the other end; a JSON error there is a dead page.
   Cancelling the consent screen arrives as `?error=access_denied` and lands as `calendar=denied`.
@@ -283,7 +283,10 @@ export function createCalendarRoutes(deps: CalendarSyncDeps, options: CalendarRo
       return new Response(null, { status });
     },
 
-    /** POST with `Authorization: Bearer <cronSecret>`. Every 12 h with the default 48 h renewal window. */
+    /**
+     * GET (Vercel Cron) or POST, with `Authorization: Bearer <cronSecret>`. Every 12 h with the default
+     * 48 h renewal window.
+     */
     async cron(request: Request): Promise<Response> {
       const header = request.headers.get('authorization') ?? '';
       // Fails closed: an unset secret matches nothing.
@@ -299,7 +302,9 @@ export function createCalendarRoutes(deps: CalendarSyncDeps, options: CalendarRo
 ## Wiring
 
 One module builds the dependencies. This example uses Firestore and environment variables; swap the
-store and the three declared host functions for your own.
+store and the three declared host functions for your own, and keep the rest as it is. It builds on first
+use, not at import: `next build` imports every route module to collect page data, and a `required()` at
+module scope fails the build wherever the secrets are not set, such as CI or a preview deployment.
 
 ```ts
 // calendar-sync/setup.ts: the one place that builds the deps (example: Firestore, env vars)
@@ -321,36 +326,57 @@ declare function verifySession(request: Request): Promise<string | null>;
 declare function listUpcomingBookingsForHost(userId: string, from: Date): Promise<BookingForCalendar[]>;
 declare function saveMeetingUrl(bookingId: string, url: string): Promise<void>;
 
-const config = {
-  ...DEFAULT_SYNC_SETTINGS,
-  clientId: required('GOOGLE_CALENDAR_CLIENT_ID'),
-  clientSecret: required('GOOGLE_CALENDAR_CLIENT_SECRET'),
-  redirectUri: required('GOOGLE_CALENDAR_REDIRECT_URI'),
-  notificationUrl: required('GOOGLE_CALENDAR_NOTIFICATION_URL'),
-  channelSecret: required('CALENDAR_CHANNEL_SECRET'),
-  encryptionKey: required('CALENDAR_TOKEN_KEY'),
-};
+type CalendarRoutes = ReturnType<typeof createCalendarRoutes>;
+let built: { deps: CalendarSyncDeps; routes: CalendarRoutes } | undefined;
 
-export const calendarDeps: CalendarSyncDeps = {
-  store: createFirestoreCalendarStore(getFirestore()),
-  google: createGoogleApi(config),
-  config,
-  bookings: { listUpcomingForPrimaryHost: listUpcomingBookingsForHost },
-  log: {
-    info: (kind, data) => console.log(JSON.stringify({ severity: 'INFO', kind, ...data })),
-    warn: (kind, data) => console.warn(JSON.stringify({ severity: 'WARNING', kind, ...data })),
-    error: (kind, data) => console.error(JSON.stringify({ severity: 'ERROR', kind, ...data })),
-  },
-  now: () => new Date(),
-  onConferenceLink: saveMeetingUrl,
-};
+function build(): { deps: CalendarSyncDeps; routes: CalendarRoutes } {
+  if (built) return built;
+  const config = {
+    ...DEFAULT_SYNC_SETTINGS,
+    clientId: required('GOOGLE_CALENDAR_CLIENT_ID'),
+    clientSecret: required('GOOGLE_CALENDAR_CLIENT_SECRET'),
+    redirectUri: required('GOOGLE_CALENDAR_REDIRECT_URI'),
+    notificationUrl: required('GOOGLE_CALENDAR_NOTIFICATION_URL'),
+    channelSecret: required('CALENDAR_CHANNEL_SECRET'),
+    encryptionKey: required('CALENDAR_TOKEN_KEY'),
+  };
+  const deps: CalendarSyncDeps = {
+    store: createFirestoreCalendarStore(getFirestore()),
+    google: createGoogleApi(config),
+    config,
+    bookings: { listUpcomingForPrimaryHost: listUpcomingBookingsForHost },
+    log: {
+      info: (kind, data) => console.log(JSON.stringify({ severity: 'INFO', kind, ...data })),
+      warn: (kind, data) => console.warn(JSON.stringify({ severity: 'WARNING', kind, ...data })),
+      error: (kind, data) => console.error(JSON.stringify({ severity: 'ERROR', kind, ...data })),
+    },
+    now: () => new Date(),
+    onConferenceLink: saveMeetingUrl,
+  };
+  const routes = createCalendarRoutes(deps, {
+    authenticate: verifySession,
+    appReturnUrl: required('CALENDAR_RETURN_URL'),
+    cronSecret: required('CRON_SECRET'),
+  });
+  return (built = { deps, routes });
+}
 
-export const calendarRoutes = createCalendarRoutes(calendarDeps, {
-  authenticate: verifySession,
-  appReturnUrl: required('CALENDAR_RETURN_URL'),
-  cronSecret: required('CRON_SECRET'),
-});
+/** The deps for `pushBookingEvent`, `removeBookingEvent` and `listHostBusy`, built on first call. */
+export const calendarDeps = (): CalendarSyncDeps => build().deps;
+/** The seven handlers, built on first call; a missing variable fails that request, not the build. */
+export const calendarRoutes = (): CalendarRoutes => build().routes;
 ```
+
+Copy the wiring as it is. Each of these was added by an agent and none is needed:
+
+- **Lazy construction of your own.** `setup.ts` already builds on first use; no getter, proxy or default
+  value per variable. A missing variable fails the request that needs it, with its name.
+- **A default for a variable.** Every variable in [operations.md](operations.md) is required; a fallback
+  such as a default `CALENDAR_RETURN_URL` hides a misconfigured deployment.
+- **Reordering the webhook.** The `sync` handshake is answered before the token check on purpose: it reads
+  nothing and changes nothing, so a forged one costs a 200 and no more.
+- **Work of the host's own in the cron route.** The route renews channels and resyncs, every 12 hours.
+  Retries, queues or reminders of the host's get their own route and schedule.
 
 Next.js App Router:
 
@@ -360,17 +386,19 @@ import { calendarRoutes } from '@/calendar-sync/setup';
 
 export async function GET(request: Request, { params }: { params: Promise<{ action: string }> }) {
   const { action } = await params;
-  if (action === 'connect') return calendarRoutes.connect(request);
-  if (action === 'callback') return calendarRoutes.callback(request);
-  if (action === 'calendars') return calendarRoutes.list(request);
+  if (action === 'connect') return calendarRoutes().connect(request);
+  if (action === 'callback') return calendarRoutes().callback(request);
+  if (action === 'calendars') return calendarRoutes().list(request);
+  // Vercel Cron calls with GET and `Authorization: Bearer $CRON_SECRET`; other schedulers POST.
+  if (action === 'cron') return calendarRoutes().cron(request);
   return new Response(null, { status: 404 });
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ action: string }> }) {
   const { action } = await params;
-  if (action === 'notifications') return calendarRoutes.notifications(request);
-  if (action === 'disconnect') return calendarRoutes.disconnect(request);
-  if (action === 'cron') return calendarRoutes.cron(request);
+  if (action === 'notifications') return calendarRoutes().notifications(request);
+  if (action === 'disconnect') return calendarRoutes().disconnect(request);
+  if (action === 'cron') return calendarRoutes().cron(request);
   return new Response(null, { status: 404 });
 }
 ```
@@ -380,7 +408,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
 import { calendarRoutes } from '@/calendar-sync/setup';
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ calendarId: string }> }) {
-  return calendarRoutes.update(request, (await params).calendarId);
+  return calendarRoutes().update(request, (await params).calendarId);
 }
 ```
 
@@ -414,21 +442,23 @@ async function send(res: ExpressResponse, response: Response): Promise<void> {
   res.send(Buffer.from(await response.arrayBuffer()));
 }
 
-type Handler = (request: Request) => Promise<Response>;
-const route = (handler: Handler) => (req: ExpressRequest, res: ExpressResponse) =>
-  handler(toWebRequest(req)).then(response => send(res, response));
+// Looked up per request, so a missing variable fails that request and not the server's start.
+type Handler = Exclude<keyof ReturnType<typeof calendarRoutes>, 'update'>;
+const route = (name: Handler) => (req: ExpressRequest, res: ExpressResponse) =>
+  calendarRoutes()[name](toWebRequest(req)).then(response => send(res, response));
 
 export const calendarRouter = express.Router();
 calendarRouter.use(express.json());
-calendarRouter.get('/calendar/google/connect', route(calendarRoutes.connect));
-calendarRouter.get('/calendar/google/callback', route(calendarRoutes.callback));
-calendarRouter.get('/calendar/google/calendars', route(calendarRoutes.list));
+calendarRouter.get('/calendar/google/connect', route('connect'));
+calendarRouter.get('/calendar/google/callback', route('callback'));
+calendarRouter.get('/calendar/google/calendars', route('list'));
 calendarRouter.patch('/calendar/google/calendars/:calendarId', (req, res) =>
-  calendarRoutes.update(toWebRequest(req), String(req.params.calendarId)).then(response => send(res, response))
+  calendarRoutes().update(toWebRequest(req), String(req.params.calendarId)).then(response => send(res, response))
 );
-calendarRouter.post('/calendar/google/disconnect', route(calendarRoutes.disconnect));
-calendarRouter.post('/calendar/google/notifications', route(calendarRoutes.notifications));
-calendarRouter.post('/calendar/google/cron', route(calendarRoutes.cron));
+calendarRouter.post('/calendar/google/disconnect', route('disconnect'));
+calendarRouter.post('/calendar/google/notifications', route('notifications'));
+calendarRouter.get('/calendar/google/cron', route('cron'));
+calendarRouter.post('/calendar/google/cron', route('cron'));
 ```
 
 ## Checklist

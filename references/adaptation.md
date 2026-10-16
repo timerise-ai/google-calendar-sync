@@ -23,7 +23,7 @@ and the non-negotiables that do not bend.
 |---|---|---|
 | Domain words | Connection, LinkedCalendar, WatchChannel, BusyBlock, BookingForCalendar, and a rename table in [data-model.md](data-model.md) | Its own words for each |
 | Tenant scope | Per user: one Google account per `userId` | Its user id; org scoping stays in its guard |
-| Auth | `authenticate(request): Promise<string \| null>` | Its session lookup: Clerk, NextAuth, Firebase Auth, Supabase Auth |
+| Auth | `authenticate(request): Promise<string \| null>` | Its session lookup: Clerk, NextAuth, Firebase Auth, Supabase Auth. A verified session's user id, else `null`; never a client-set header or a fixed fallback user |
 | Data | `CalendarStore` with Firestore and Supabase implementations | Its project, the index and rules or the schema applied |
 | Bookings | `BookingSource`, `pushBookingEvent`, `removeBookingEvent` | Calls from its booking status flow |
 | Availability | Busy blocks per user and the `listHostBusy` query | Its slot engine, for example `time-slot-generator` |
@@ -46,12 +46,19 @@ and the non-negotiables that do not bend.
    ([channels-and-settings.md](channels-and-settings.md)), then the doubles and the flows suite
    ([testing.md](testing.md)). Run them.
 5. Copy the store for the host's database ([firestore-backend.md](firestore-backend.md) or
-   [supabase-backend.md](supabase-backend.md)) and apply its index and rules or its schema.
+   [supabase-backend.md](supabase-backend.md)), install its client with `npm i firebase-admin` or
+   `npm i @supabase/supabase-js`, and apply its index and rules or its schema. The package registry is not
+   an external service: an unattended run that may not call Google or Supabase still installs packages, and
+   never replaces the client with a hand-written one.
 6. Mount the routes and the cron ([http-routes.md](http-routes.md)); wire `authenticate` to the host's
    session and `pushBookingEvent` and `removeBookingEvent` to its booking status flow.
 7. Feed the busy blocks to the host's availability, and build the settings screen on the list route.
 8. Set the environment, schedule the cron, and give operators the health view
    ([operations.md](operations.md)).
+9. Hand over. The final message tells the operator to apply the schema (or the index and rules), set the
+   eight variables in [operations.md](operations.md), schedule the cron every 12 hours with `CRON_SECRET`,
+   publish the consent screen (in Testing, grants die after 7 days), serve the notification URL on public
+   HTTPS (`localhost` gets no notifications), and wire every seam left as a placeholder.
 
 ## Non-negotiables
 

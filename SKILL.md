@@ -64,7 +64,7 @@ work. The rename table is in [data-model.md](references/data-model.md).
 
 | Seam | This skill ships | The host supplies |
 |---|---|---|
-| Auth | `authenticate(request): userId or null` | Its session lookup |
+| Auth | `authenticate(request): userId or null` | A verified session's user id, else `null`; never a client-set header or a fixed fallback user |
 | Data | `CalendarStore` on Firestore and Supabase | Its project |
 | Bookings | `BookingSource`, `pushBookingEvent`, `removeBookingEvent` | Calls from its booking status flow |
 | Availability | Busy blocks per user, `listHostBusy` | Its slot engine (`time-slot-generator`) |
@@ -118,13 +118,20 @@ work. The rename table is in [data-model.md](references/data-model.md).
 5. Copy inbound sync, [busy-sync.md](references/busy-sync.md); outbound,
    [booking-events.md](references/booking-events.md); lifecycle,
    [channels-and-settings.md](references/channels-and-settings.md).
-6. Pick a store: [firestore-backend.md](references/firestore-backend.md) or
-   [supabase-backend.md](references/supabase-backend.md).
-7. Mount the routes and the cron: [http-routes.md](references/http-routes.md).
-8. Copy the suite and run it under two `TZ` values: [testing.md](references/testing.md),
+6. Pick a store, [firestore-backend.md](references/firestore-backend.md) or
+   [supabase-backend.md](references/supabase-backend.md), and `npm i` its client (`firebase-admin` or
+   `@supabase/supabase-js`). The package registry is not an external service; never hand-write a client.
+7. Mount the routes and the cron as shipped: [http-routes.md](references/http-routes.md). `setup.ts`
+   builds on first use, so `next build` needs no secrets; nothing goes between a route and its handler.
+   The cron runs every 12 hours (GET from Vercel Cron, POST elsewhere) and does only the module's work.
+8. Copy the suite and run it unchanged under two `TZ` values: [testing.md](references/testing.md),
    [test-suite.md](references/test-suite.md).
 9. Give operators the health view: [operations.md](references/operations.md).
-10. Fixing an existing integration? The order is in [provenance.md](references/provenance.md).
+10. Hand over. The final message tells the operator to apply the schema (or the index and rules), set the
+    eight variables in [operations.md](references/operations.md), schedule the cron every 12 hours with
+    `CRON_SECRET`, publish the consent screen (in Testing, grants die after 7 days), serve the notification
+    URL on public HTTPS (`localhost` gets no notifications), and wire every seam left as a placeholder.
+11. Fixing an existing integration? The order is in [provenance.md](references/provenance.md).
 
 ## Reference directory
 
