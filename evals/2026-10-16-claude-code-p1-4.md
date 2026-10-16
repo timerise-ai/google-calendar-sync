@@ -25,3 +25,9 @@ isolated: true
 timedOut: false
 runUrl: https://github.com/timerise-ai/google-calendar-sync/actions/runs/38953298875
 ---
+
+Rubric 8/8. Scored from the summary. `setup.ts` builds on first use and the build passes with no variables set;
+the host seams sit in `calendar-sync/host.ts` beside it, with `listUpcomingBookingsForHost` and
+`saveMeetingUrl` left as named placeholders rather than an invented bookings table. `authenticate` checks the
+Supabase session or Bearer token with Supabase, the suite runs as shipped (32 in four zones), the cron is
+12-hourly in `vercel.json`, and the final message ends with all six handover items, the placeholders among them.
