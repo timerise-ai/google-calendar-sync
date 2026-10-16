@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-10-16
+
+Fix release, from scoring the prompt-1 agent eval runs against 0.2.0.
+
+### Fixed
+
+- `calendar-sync/setup.ts` builds the deps and routes on first call (`calendarRoutes()`, `calendarDeps()`)
+  instead of at import. Read at import, every variable was required by `next build`, which imports each
+  route module to collect page data, so a build without secrets (CI, a preview deployment) failed. Apps
+  built from 0.2.0 that build where the secrets are set are unaffected; others copy the new `setup.ts` and
+  call `calendarRoutes()` in their route files.
+- The cron route answers GET as well as POST: Vercel Cron, which the skill names as a scheduler, calls with
+  GET and `Authorization: Bearer $CRON_SECRET`.
+
+### Changed
+
+- The quick start in `SKILL.md` and the order of work in `adaptation.md` say to install the store's client
+  from the package registry, which is not an external service, and never to hand-write one.
+- The auth seam row says `authenticate` returns a verified session's user id or `null`, never a client-set
+  header or a fixed fallback user.
+- A handover step names what the final message tells the operator: schema, the eight variables, the
+  12-hour cron with `CRON_SECRET`, the consent screen, a public HTTPS notification URL, placeholder seams.
+- `http-routes.md` lists the additions the wiring does not need; `testing.md` says the suite runs as
+  shipped; `operations.md` covers Vercel Cron's GET and its once-a-day Hobby limit.
+
 ## [0.2.0] - 2026-10-16
 
 The skill brought to the Timerise skill standard, with a new adaptation reference, agent evals, and one
