@@ -127,10 +127,11 @@ work. The rename table is in [data-model.md](references/data-model.md).
 8. Copy the suite and run it unchanged under two `TZ` values: [testing.md](references/testing.md),
    [test-suite.md](references/test-suite.md).
 9. Give operators the health view: [operations.md](references/operations.md).
-10. Hand over. The final message tells the operator to apply the schema (or the index and rules), set the
-    eight variables in [operations.md](references/operations.md), schedule the cron every 12 hours with
-    `CRON_SECRET`, publish the consent screen (in Testing, grants die after 7 days), serve the notification
-    URL on public HTTPS (`localhost` gets no notifications), and wire every seam left as a placeholder.
+10. Hand over. The final message ends with a "Before it works" list of all six, each its own item:
+    (1) apply the schema, or the index and rules; (2) set the eight variables in
+    [operations.md](references/operations.md); (3) schedule the cron every 12 hours with `CRON_SECRET`;
+    (4) publish the consent screen, since grants in Testing die after 7 days; (5) serve the notification
+    URL on public HTTPS, as `localhost` gets no notifications; (6) wire every seam left as a placeholder.
 11. Fixing an existing integration? The order is in [provenance.md](references/provenance.md).
 
 ## Reference directory

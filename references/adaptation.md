@@ -55,10 +55,11 @@ and the non-negotiables that do not bend.
 7. Feed the busy blocks to the host's availability, and build the settings screen on the list route.
 8. Set the environment, schedule the cron, and give operators the health view
    ([operations.md](operations.md)).
-9. Hand over. The final message tells the operator to apply the schema (or the index and rules), set the
-   eight variables in [operations.md](operations.md), schedule the cron every 12 hours with `CRON_SECRET`,
-   publish the consent screen (in Testing, grants die after 7 days), serve the notification URL on public
-   HTTPS (`localhost` gets no notifications), and wire every seam left as a placeholder.
+9. Hand over. The final message ends with a "Before it works" list of all six, each its own item: (1) apply
+   the schema, or the index and rules; (2) set the eight variables in [operations.md](operations.md);
+   (3) schedule the cron every 12 hours with `CRON_SECRET`; (4) publish the consent screen, since grants in
+   Testing die after 7 days; (5) serve the notification URL on public HTTPS, as `localhost` gets no
+   notifications; (6) wire every seam left as a placeholder.
 
 ## Non-negotiables
 
