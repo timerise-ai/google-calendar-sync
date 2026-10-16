@@ -110,7 +110,7 @@ questions: `free`, `declined`, `own-booking`.
 
 | Variable | Example | Notes |
 |---|---|---|
-| `GOOGLE_CALENDAR_CLIENT_ID` | `…apps.googleusercontent.com` | OAuth client, *Web application* |
+| `GOOGLE_CALENDAR_CLIENT_ID` | `...apps.googleusercontent.com` | OAuth client, *Web application* |
 | `GOOGLE_CALENDAR_CLIENT_SECRET` | | Secret manager |
 | `GOOGLE_CALENDAR_REDIRECT_URI` | `https://api.example.com/calendar/google/callback` | Registered in the console, per environment |
 | `GOOGLE_CALENDAR_NOTIFICATION_URL` | `https://api.example.com/calendar/google/notifications` | Public HTTPS, trusted certificate |

@@ -10,7 +10,7 @@
 | `calendarChannels` | channel UUID | `userId`, `calendarId`, `resourceId`, `expiresAt`, `createdAt` |
 | `calendarBusyBlocks` | `busyBlockId(calendarId, eventId)` | `userId`, `calendarId`, `eventId`, `from`, `to`, `allDay` |
 
-Top-level rather than `users/{uid}/…` subcollections: the cron pages across all users' calendars, the
+Top-level rather than `users/{uid}/...` subcollections: the cron pages across all users' calendars, the
 webhook resolves a channel without knowing its user, and the availability query reads blocks by user
 id across calendars. All three are one query on a top-level collection.
 
@@ -95,7 +95,7 @@ const C = {
 
 const BATCH_LIMIT = 500;
 
-/** Timestamp → Date for the listed fields; everything else passes through. */
+/** Timestamp to Date for the listed fields; everything else passes through. */
 function fromDoc<T>(data: firestore.DocumentData, dateFields: readonly string[]): T {
   const out: Record<string, unknown> = { ...data };
   for (const field of dateFields) {

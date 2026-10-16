@@ -9,9 +9,9 @@ automatic token refresh happens in memory where an `invalid_grant` cannot be tur
 
 | Method | HTTP | Notes |
 |---|---|---|
-| `authUrl` | — | `access_type=offline`, `prompt=consent`, PKCE S256 |
+| `authUrl` | none | `access_type=offline`, `prompt=consent`, PKCE S256 |
 | `exchangeCode` | `POST oauth2.googleapis.com/token` | `grant_type=authorization_code` with `code_verifier` |
-| `refresh` | `POST …/token` | No new refresh token in the response, as a rule |
+| `refresh` | `POST .../token` | No new refresh token in the response, as a rule |
 | `revoke` | `POST oauth2.googleapis.com/revoke` | 400 means already revoked: treated as success |
 | `primaryCalendarId` | `GET /calendars/primary` | The id is the account e-mail |
 | `listCalendars` | `GET /users/me/calendarList` | Paged, 250 per page |
@@ -35,7 +35,7 @@ automatic token refresh happens in memory where an `invalid_grant` cannot be tur
   calendar loses everything after it, and a diff against that page deletes their blocks.
 - **`timeMin` filters on the event's end, `timeMax` on its start.** An event in progress at `now` is
   included, which is what availability needs.
-- **Event ids you choose** must use base32hex (`a`–`v`, `0`–`9`), 5 to 1024 characters, unique per
+- **Event ids you choose** must use base32hex (`a` to `v`, `0` to `9`), 5 to 1024 characters, unique per
   calendar. A 409 on insert means the id exists, and Google's guidance is to update instead.
 - **`sendUpdates` defaults to none on insert.** This skill states it explicitly on every write so a
   future default change cannot start e-mailing guests.
@@ -69,7 +69,7 @@ const API = 'https://www.googleapis.com/calendar/v3';
 
 export class GoogleApiError extends Error {
   readonly status: number;
-  /** `errors[0].reason` for API calls (`notFound`, `duplicate`, `rateLimitExceeded`…), `error` for OAuth (`invalid_grant`). */
+  /** `errors[0].reason` for API calls (`notFound`, `duplicate`, `rateLimitExceeded`, ...), `error` for OAuth (`invalid_grant`). */
   readonly reason: string;
 
   constructor(status: number, reason: string, message: string) {

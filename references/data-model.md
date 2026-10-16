@@ -17,15 +17,15 @@ to look up. See [booking-events.md](booking-events.md).
 
 Decide the host's words before copying, and rename everywhere at once.
 
-| Skill | Source app called it | Typical host words |
-|---|---|---|
-| `userId` (the host) | user | staff, provider, employee, member, resource owner |
-| `LinkedCalendar` | user calendar | connected calendar |
-| `syncBusy` | `syncExceptions` | "check for conflicts", "block my availability" |
-| `syncBookings` | `syncBookings` | "add bookings to calendar" |
-| `BusyBlock` | exception (`slotType: 'EXCEPTION'`) | busy time, blocked time, conflict |
-| `WatchChannel` | calendar subscription | push channel, webhook subscription |
-| `BookingForCalendar` | booking | appointment, reservation, session, shift |
+| Skill | Typical host words |
+|---|---|
+| `userId` (the host) | user, staff, provider, employee, member, resource owner |
+| `LinkedCalendar` | connected calendar, user calendar |
+| `syncBusy` | "check for conflicts", "block my availability" |
+| `syncBookings` | "add bookings to calendar" |
+| `BusyBlock` | busy time, blocked time, conflict, exception |
+| `WatchChannel` | push channel, webhook subscription, calendar subscription |
+| `BookingForCalendar` | booking, appointment, reservation, session, shift |
 
 Keep Google's own terms (`externalId`, `resourceId`, `accessRole`, `transparency`) as they are; they
 are the API's vocabulary, not the domain's.
@@ -34,11 +34,11 @@ are the API's vocabulary, not the domain's.
 
 ```
              connect             toggle syncBusy on                  toggle off / calendar gone / disconnect
- (nothing) ──────────▶ rows ─────────────────────────▶ channel + blocks ─────────────────────────────────▶ (nothing)
-                        │  invalid_grant                       │  cron every 12 h: renew channel, resync
-                        ▼                                      ▼
-                 reauth_required ── reconnect same account ──▶ connected, settings kept, channels reopened
-                                 └─ reconnect other account ─▶ old rows torn down, new rows
+ (nothing) ----------> rows -------------------------> channel + blocks ---------------------------------> (nothing)
+                        |  invalid_grant                       |  cron every 12 h: renew channel, resync
+                        v                                      v
+                 reauth_required -- reconnect same account --> connected, settings kept, channels reopened
+                                 +- reconnect other account -> old rows torn down, new rows
 ```
 
 ## Types
@@ -80,7 +80,7 @@ export interface LinkedCalendar {
   /** `calendarRowId(userId, externalId)`, deterministic so concurrent listings cannot create duplicates. */
   id: string;
   userId: string;
-  /** Google's calendar id: an e-mail address, `…@group.calendar.google.com`, or `…#holiday@group.v.calendar.google.com`. */
+  /** Google's calendar id: an e-mail address, `...@group.calendar.google.com`, or `...#holiday@group.v.calendar.google.com`. */
   externalId: string;
   title: string;
   accessRole: GoogleAccessRole;

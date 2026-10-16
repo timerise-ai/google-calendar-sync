@@ -11,7 +11,7 @@ step, and writing the same booking twice is one event.
 | Confirmed (or paid, whichever the host calls "booked") | `pushBookingEvent(deps, booking)` | Primary host's calendars with `syncBookings` and `isWritable` |
 | Cancelled, expired, refunded | `removeBookingEvent(deps, booking)` | Every host's `syncBookings` calendars |
 | Rescheduled into a new booking | `removeBookingEvent(old)` then `pushBookingEvent(new)` | The new booking id gives a new event id |
-| Time or details edited in place | `pushBookingEvent(deps, booking)` again | 409 → update replaces the body |
+| Time or details edited in place | `pushBookingEvent(deps, booking)` again | 409 turns into an update that replaces the body |
 | Host turns booking sync on | `backfillBookings` (automatic, via settings) | `BookingSource.listUpcomingForPrimaryHost` |
 
 Neither call throws. A Google outage, a revoked grant or a deleted calendar is logged and reported in
@@ -23,7 +23,7 @@ the transaction open.
 
 | Field | Value | Why |
 |---|---|---|
-| `id` | `bk` + 40 hex chars of `sha256("booking\n" + bookingId)` | Hex ⊂ base32hex; stable per booking; 409 on a repeat |
+| `id` | `bk` + 40 hex chars of `sha256("booking\n" + bookingId)` | Hex is a subset of base32hex; stable per booking; 409 on a repeat |
 | `start` / `end` | `{ dateTime: instant.toISOString(), timeZone }` | Full instant with `Z`; the zone only affects display |
 | `summary` / `description` | `describeBooking(booking)` | The host's wording and language |
 | `attendees` | guest, then other hosts with an e-mail | One host without an address would make Google reject the event |
@@ -61,8 +61,8 @@ import { withAccessToken } from './tokens';
 import type { BookingForCalendar, CalendarSyncDeps, LinkedCalendar } from './types';
 
 /**
- * The Google event id for a booking. Hex is a subset of base32hex (a–v, 0–9), the only alphabet
- * Google accepts, and 42 characters is inside its 5–1024 range. The same booking always maps to the
+ * The Google event id for a booking. Hex is a subset of base32hex (a to v, 0 to 9), the only alphabet
+ * Google accepts, and 42 characters is inside its 5 to 1024 range. The same booking always maps to the
  * same id, so a retry or a second trigger hits 409 instead of creating a duplicate event.
  */
 export function bookingEventId(bookingId: string): string {
@@ -156,7 +156,7 @@ async function writeToCalendar(
 
 /**
  * Booking confirmed (or rescheduled into a new booking): write it to every booking-sync calendar
- * of the primary host. Never throws — a Google outage must not fail the booking.
+ * of the primary host. Never throws: a Google outage must not fail the booking.
  */
 export async function pushBookingEvent(
   deps: CalendarSyncDeps,

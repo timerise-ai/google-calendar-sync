@@ -1,6 +1,6 @@
 # HTTP routes
 
-Seven handlers on the Web `Request → Response` API, so they mount unchanged in Next.js route handlers,
+Seven handlers on the Web `Request` and `Response` API, so they mount unchanged in Next.js route handlers,
 Hono, Bun or Deno, and through a small adapter in Express.
 
 | Route | Method | Auth | Answers |
@@ -204,7 +204,7 @@ export function createCalendarRoutes(deps: CalendarSyncDeps, options: CalendarRo
   }
 
   return {
-    /** GET → `{ url }`; the client navigates to it. */
+    /** GET returns `{ url }`; the client navigates to it. */
     async connect(request: Request): Promise<Response> {
       const userId = await options.authenticate(request);
       if (!userId) return json({ error: 'unauthenticated' }, 401);
@@ -234,7 +234,7 @@ export function createCalendarRoutes(deps: CalendarSyncDeps, options: CalendarRo
       }
     },
 
-    /** GET → connection, calendars and their health. Refreshes from Google; falls back to stored rows. */
+    /** GET returns the connection, calendars and their health. Refreshes from Google; falls back to stored rows. */
     async list(request: Request): Promise<Response> {
       const userId = await options.authenticate(request);
       if (!userId) return json({ error: 'unauthenticated' }, 401);
@@ -302,7 +302,7 @@ One module builds the dependencies. This example uses Firestore and environment 
 store and the three declared host functions for your own.
 
 ```ts
-// calendar-sync/setup.ts — the one place that builds the deps (example: Firestore, env vars)
+// calendar-sync/setup.ts: the one place that builds the deps (example: Firestore, env vars)
 import { getFirestore } from 'firebase-admin/firestore';
 
 import { createGoogleApi } from './googleApi';
@@ -355,7 +355,7 @@ export const calendarRoutes = createCalendarRoutes(calendarDeps, {
 Next.js App Router:
 
 ```ts
-// app/api/calendar/google/[action]/route.ts — Next.js App Router
+// app/api/calendar/google/[action]/route.ts: Next.js App Router
 import { calendarRoutes } from '@/calendar-sync/setup';
 
 export async function GET(request: Request, { params }: { params: Promise<{ action: string }> }) {
@@ -373,8 +373,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   if (action === 'cron') return calendarRoutes.cron(request);
   return new Response(null, { status: 404 });
 }
+```
 
+```ts
 // app/api/calendar/google/calendars/[calendarId]/route.ts
+import { calendarRoutes } from '@/calendar-sync/setup';
+
 export async function PATCH(request: Request, { params }: { params: Promise<{ calendarId: string }> }) {
   return calendarRoutes.update(request, (await params).calendarId);
 }
@@ -385,7 +389,7 @@ In Next.js 15+, `defer: task => after(task)` (from `next/server`) answers Google
 Express (the adapter turns each request into a Web `Request` once):
 
 ```ts
-// server/calendarRouter.ts — Express: adapt each request to the Web API once, and send the Response back.
+// server/calendarRouter.ts: Express, adapt each request to the Web API once, and send the Response back.
 import express, { type Request as ExpressRequest, type Response as ExpressResponse } from 'express';
 
 import { calendarRoutes } from '@/calendar-sync/setup';

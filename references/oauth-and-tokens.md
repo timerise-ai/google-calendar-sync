@@ -8,10 +8,10 @@ granted, and what happens the day the refresh token stops working.
 
 | Step | Where | Value |
 |---|---|---|
-| Enable the API | APIs & Services → Library | Google Calendar API |
-| OAuth client | Credentials → Create OAuth client ID | Type *Web application* |
+| Enable the API | APIs & Services, then Library | Google Calendar API |
+| OAuth client | Credentials, then Create OAuth client ID | Type *Web application* |
 | Redirect URI | the client's *Authorized redirect URIs* | `https://api.example.com/calendar/google/callback`, exactly as `GOOGLE_CALENDAR_REDIRECT_URI` |
-| Scopes | consent screen → Data access | `…/auth/calendar.readonly`, `…/auth/calendar.events` |
+| Scopes | consent screen, then Data access | `.../auth/calendar.readonly`, `.../auth/calendar.events` |
 | Audience | consent screen | *External* for customers' accounts; *Internal* only for your own Workspace |
 | Publishing | consent screen | *In production*, then Google's verification for the calendar scopes |
 
@@ -37,9 +37,9 @@ is non-writable and booking sync cannot be switched on.
 ## The round trip
 
 ```
-GET /connect (signed in) ─▶ AuthRequest{state, userId, verifier, +10 min} ─▶ { url } with state + S256 challenge
-Google consent ─▶ GET /callback?code&state ─▶ consume(state) atomically ─▶ exchange(code, verifier)
-             ─▶ check scopes ─▶ primary calendar id = account e-mail ─▶ same account? keep : tear down ─▶ save
+GET /connect (signed in) -> AuthRequest{state, userId, verifier, +10 min} -> { url } with state + S256 challenge
+Google consent -> GET /callback?code&state -> consume(state) atomically -> exchange(code, verifier)
+             -> check scopes -> primary calendar id = account e-mail -> same account? keep : tear down -> save
 ```
 
 - **The state is a key, not a payload.** Anything put into it (a user id, a provider) can be edited by
@@ -62,7 +62,7 @@ Google consent ─▶ GET /callback?code&state ─▶ consume(state) atomically 
 | Access token near expiry | refreshed 60 s early, saved encrypted | `withAccessToken` |
 | A 401 on a call | one forced refresh and one retry | `withAccessToken` |
 | Refresh without a new refresh token | the stored one is kept | `toStoredTokens` |
-| `invalid_grant` on refresh | connection → `reauth_required`, error code `reauth-required` | `refreshTokens` |
+| `invalid_grant` on refresh | connection set to `reauth_required`, error code `reauth-required` | `refreshTokens` |
 | Reconnect, same account | `connected` again, settings kept, channels reopened, resync | `completeConnect` |
 | Disconnect | channels stopped, blocks and rows deleted, grant revoked, tokens deleted | `disconnect` |
 

@@ -9,7 +9,7 @@ stopping channels, and the settings changes that set them in motion.
 | Moment | Action | Failure handling |
 |---|---|---|
 | Busy sync switched on | `startChannel`, then first `syncBusy` | Row keeps `syncBusy: true` and `lastSyncError`; the cron opens the channel |
-| Every cron run | channel missing or expiring within `renewBeforeMs` → new channel, **then** stop old | Old channel kept; error recorded; retried next run |
+| Every cron run | channel missing or expiring within `renewBeforeMs`: new channel, **then** stop old | Old channel kept; error recorded; retried next run |
 | Every cron run | `syncBusy` on every busy calendar | Recorded on the row |
 | Busy sync switched off | row unlinked, channel stopped, blocks deleted | Stop is best effort; the local record always goes |
 | Calendar gone from Google, disconnect, other account | `teardownCalendar` | Same |
@@ -33,13 +33,13 @@ stopping channels, and the settings changes that set them in motion.
 `updateCalendarSettings` writes the row (one compare-and-swap, so concurrent toggles serialize), then
 runs what the change implies:
 
-| Before → after | Transition | Effect |
+| From, to | Transition | Effect |
 |---|---|---|
-| `syncBusy` off → on | `start-busy` | open channel, first sync |
-| `syncBusy` on → off | `stop-busy` | stop channel, delete blocks |
-| `syncBookings` off → on | `backfill-bookings` | write upcoming bookings of this host |
-| `syncBookings` on → off | — | existing events stay |
-| `title` | — | display only |
+| `syncBusy` off, on | `start-busy` | open channel, first sync |
+| `syncBusy` on, off | `stop-busy` | stop channel, delete blocks |
+| `syncBookings` off, on | `backfill-bookings` | write upcoming bookings of this host |
+| `syncBookings` on, off | none | existing events stay |
+| `title` | none | display only |
 
 Guards: the calendar must belong to the caller (`calendar-not-found` otherwise, never "forbidden", so
 ids cannot be probed), and booking sync needs `isWritable` (`calendar-not-writable`). A transition that

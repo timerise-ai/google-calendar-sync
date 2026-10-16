@@ -43,11 +43,11 @@ In a host with vitest or jest, the files run unchanged once the runner's TypeScr
 | without the events scope nothing is writable | Booking writes failing with 403 |
 | every page imported; failed page deletes nothing | Truncated calendars; mass deletion on a transient error |
 | a burst converges | Duplicate blocks from concurrent notifications |
-| renewal new-before-old, kept on failure | Calendars silently losing their channel |
+| renewal new-before-old, kept on failure | Calendars losing their channel with no error |
 | renewal heals a lost channel | `syncBusy: true` with no channel, forever |
 | pushed twice is one event; mirror never busy | Duplicate events; self-blocking |
 | cancel twice, re-confirm restores | Errors on repeat; 409 on a re-confirmed booking |
-| revoked grant → reauth, reconnect keeps settings | Empty calendar lists; users re-configuring after every revoke |
+| revoked grant marks reauth, reconnect keeps settings | Empty calendar lists; users re-configuring after every revoke |
 | other account tears down | Old account's blocks and channels left behind |
 | calendar removed in Google | Busy time from a calendar the user unsubscribed from |
 

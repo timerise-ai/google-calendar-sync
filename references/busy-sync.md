@@ -16,7 +16,7 @@ Evaluated in this order by `toBusyBlock`; the first match decides.
 | `eventType: 'workingLocation'` | no | "Working from home" is not a commitment |
 | `transparency: 'transparent'` | no (`free`), except on holiday calendars | Shown as *Free* in Google; Google's own free/busy ignores it |
 | own attendee `responseStatus: 'declined'` | no | The user is not going |
-| all-day (`start.date`) | yes, `start.date` → `end.date` (exclusive) at local midnights | Multi-day events span every day; DST days are 23/25 h |
+| all-day (`start.date`) | yes, `start.date` to `end.date` (exclusive) at local midnights | Multi-day events span every day; DST days are 23/25 h |
 | timed (`start.dateTime`) | yes, the instants as given | They carry their offset |
 | unparseable or `end <= start` | no (`invalid-time`) | Never write a block the engine cannot reason about |
 
@@ -36,14 +36,14 @@ the private marker leaves the guest's own copy (if the guest also uses the app) 
 
 ```
 syncBusy(calendarId)
-  lease: row.syncBusy? lease free? ── no lease ──▶ set resyncRequested, return 'queued'
-     │ acquired
-     ▼
-  list every page of [now, now + horizon) ── any page fails ──▶ record lastSyncError, release, throw (nothing deleted)
-     ▼
-  toBusyBlock each ─▶ diffBusy(stored, desired) ─▶ applyBusyDiff ─▶ lastSyncedAt
-     ▼
-  release: resyncRequested? ── yes (max 3 runs) ──▶ run again
+  lease: row.syncBusy? lease free? -- no lease --> set resyncRequested, return 'queued'
+     | acquired
+     v
+  list every page of [now, now + horizon) -- any page fails --> record lastSyncError, release, throw (nothing deleted)
+     v
+  toBusyBlock each -> diffBusy(stored, desired) -> applyBusyDiff -> lastSyncedAt
+     v
+  release: resyncRequested? -- yes (max 3 runs) --> run again
 ```
 
 - **Single flight per calendar.** Google sends notifications in bursts, often several for one edit.
@@ -105,7 +105,7 @@ export interface BusyContext {
   respectTransparency: boolean;
 }
 
-/** Holiday calendars (`…#holiday@group.v.calendar.google.com`) cannot be watched and are only enabled to block. */
+/** Holiday calendars (`...#holiday@group.v.calendar.google.com`) cannot be watched and are only enabled to block. */
 export function isHolidayCalendar(externalId: string): boolean {
   return externalId.includes('#holiday');
 }
@@ -340,5 +340,5 @@ async function runOnce(deps: CalendarSyncDeps, calendar: LinkedCalendar): Promis
 - [ ] Every page read before any delete
 - [ ] Events carrying the private `bookingId` marker skipped
 - [ ] All-day events span to `end.date`, anchored to the calendar's zone from the list response
-- [ ] `horizonDays` ≥ the booking window
+- [ ] `horizonDays` at least the booking window
 - [ ] Busy blocks read by user id and treated as host busy time, in UTC
