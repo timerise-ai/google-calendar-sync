@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-10-16
+
+Wording release, from scoring the prompt-1 agent eval runs against 0.2.1.
+
+### Changed
+
+- The handover step in `SKILL.md` and `adaptation.md` asks for a "Before it works" list with each of its six
+  points as its own numbered item, so none is folded into another or dropped.
+
 ## [0.2.1] - 2026-10-16
 
 Fix release, from scoring the prompt-1 agent eval runs against 0.2.0.
