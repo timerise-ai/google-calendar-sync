@@ -25,3 +25,8 @@ isolated: true
 timedOut: false
 runUrl: https://github.com/timerise-ai/google-calendar-sync/actions/runs/38950644360
 ---
+
+Rubric 8/8. Scored from the summary. The module is the skill's with the Supabase store, the build passes with no
+variables set and a request without secrets fails naming the variable, the suite runs as shipped (32 in four
+zones), `authenticate` is Supabase Auth's verified session, the cron is every 12 hours in `vercel.json`, and
+the final message ends with the "Before it works" list, all six items in order.
