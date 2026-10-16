@@ -56,7 +56,7 @@ mkdir -p ~/.agents/skills
 ln -s ~/.claude/skills/google-calendar-sync ~/.agents/skills/google-calendar-sync
 ```
 
-Update with `git pull` in the clone. The current release is **0.1.1**. See [CHANGELOG.md](CHANGELOG.md).
+Update with `git pull` in the clone. The current release is **0.2.0**. See [CHANGELOG.md](CHANGELOG.md).
 
 ## Activation
 
