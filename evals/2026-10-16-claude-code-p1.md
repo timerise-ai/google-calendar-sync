@@ -25,3 +25,12 @@ isolated: true
 timedOut: false
 runUrl: https://github.com/timerise-ai/google-calendar-sync/actions/runs/38924035905
 ---
+
+Rubric 6/8. Scored from the summary, with a local rerun of the same version and model to read the diff: every
+module file, both test files and `schema.sql` are byte-identical to the templates, the suite runs as written
+under four zones (32 each), and `authenticate` verifies the Supabase session with `getUser`. Wiring fails:
+`setup.ts` became a lazy getter because the shipped one read every variable at import, which fails
+`next build` without secrets, and the cron route answers GET because Vercel Cron calls with GET while the
+skill mounted it on POST only. Both are defects in the skill, fixed in 0.2.1. Handover fails on one point:
+the message names the cron, the migrations and the consent screen but not that the notification URL must be
+public HTTPS, a list the skill never gave.
